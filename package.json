@@ -1,0 +1,12 @@
+{
+  "name": "brahms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Code.js",
+  "scripts": {
+    "dev": "clasp push --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
