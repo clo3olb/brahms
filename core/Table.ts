@@ -143,24 +143,6 @@ class Table<T> {
     const columns = Object.keys(this.schema).map(
       (key) => this.schema[key].header
     );
-    this.simplifyRows();
-
-    this.sheet.getRange(1, 1, 1, columns.length).setValues([columns]);
-  }
-
-  100;
-
-  simplifyRows() {
-    this.sheet.deleteRows(10, this.sheet.getMaxRows() - 10);
-  }
-
-  resetSheet() {
-    this.sheet.clearContents();
-    this.simplifyRows();
-
-    const columns = Object.keys(this.schema).map(
-      (key) => this.schema[key].header
-    );
 
     this.sheet.getRange(1, 1, 1, columns.length).setValues([columns]);
   }

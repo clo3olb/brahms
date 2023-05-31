@@ -1,8 +1,6 @@
 function init() {
-  const spreadsheet = getDBSpreadsheet();
-
-  const studentTable = getStudentTable(spreadsheet);
-  const wordTestScoreTable = getWordTestScoreTable(spreadsheet);
+  const studentTable = getStudentTable();
+  const wordTestScoreTable = getWordTestScoreTable();
 
   studentTable.createSheet();
   wordTestScoreTable.createSheet();

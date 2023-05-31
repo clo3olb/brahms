@@ -1,8 +1,5 @@
 function sendEmail() {
-  const spreadsheet = getDBSpreadsheet();
-  const studentTable = getStudentTable(spreadsheet);
+  const studentTable = getStudentTable();
 
   const students = studentTable.getAll();
-  for (let student of students) {
-  }
 }

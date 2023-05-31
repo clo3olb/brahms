@@ -1,10 +1,10 @@
-type Attendance = {
+type TeacherAttendance = {
   name: string;
   classroom: string;
   attendance: string;
 };
 
-const AttendanceTableSchema: TableSchema<Attendance> = {
+const TeacherAttendanceTableSchema_TOEFL_1: TableSchema<TeacherAttendance> = {
   name: {
     header: "이름",
     verifier: VERIFIER.TEXT,
