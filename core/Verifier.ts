@@ -8,9 +8,20 @@ function numberVerifier(value: string) {
   if (isNaN(Number(value))) throw `Number Verifier - ${value} is Not a Number`;
 }
 
+function textVerifier(value: string) {
+  if (value == undefined) throw `Text Verifier - ${value} is undefined`;
+}
+
+function genderVerifier(value: string) {
+  if (value !== "남" && value !== "여")
+    throw `Gender Verifier - ${value} is not a gender`;
+}
+
 type Verifier = (value: string) => void;
 
 const VERIFIER = {
   EMAIL: emailVerifier,
   NUMBER: numberVerifier,
+  TEXT: textVerifier,
+  GENDER: genderVerifier,
 };
