@@ -1,5 +1,5 @@
 function sendEmail() {
-  const spreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
+  const spreadsheet = getDBSpreadsheet();
   const studentTable = getStudentTable(spreadsheet);
 
   const students = studentTable.getAll();
