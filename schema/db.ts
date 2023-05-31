@@ -62,3 +62,29 @@ const WordTestScoreTableSchema: TableSchema<WordTestScore> = {
     verifier: VERIFIER.NUMBER,
   },
 };
+
+type Attendance = {
+  name: string;
+  date: string;
+  period: string;
+  attendance: number;
+};
+
+const DBAttendanceTableSchema: TableSchema<Attendance> = {
+  name: {
+    header: "이름",
+    verifier: VERIFIER.TEXT,
+  },
+  date: {
+    header: "날짜",
+    verifier: VERIFIER.TEXT,
+  },
+  period: {
+    header: "교시",
+    verifier: VERIFIER.TEXT,
+  },
+  attendance: {
+    header: "출석",
+    verifier: VERIFIER.NUMBER,
+  },
+};
