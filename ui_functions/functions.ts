@@ -1,107 +1,157 @@
-const attendanceSheetFormat = [
+const managerSheetSchema = [
   {
+    category: "TOEFL",
     className: "도약반",
-    columns: ["이름", "반", "1교시", "2교시"],
+    columns: ["유형", "이름", "반", "단어시험", "1교시", "2교시"],
   },
   {
-    className: "향상반",
-    columns: ["이름", "반", "1교시", "2교시"],
+    category: "TOEFL",
+    className: "인터반",
+    columns: ["유형", "이름", "반", "단어시험", "1교시", "2교시"],
   },
   {
+    category: "TOEFL",
     className: "정규반",
-    columns: ["이름", "반", "1교시", "2교시"],
+    columns: ["유형", "이름", "반", "단어시험", "1교시", "2교시"],
+  },
+  {
+    category: "TOEFL",
+    className: "실전반",
+    columns: ["유형", "이름", "반", "단어시험", "1교시", "2교시"],
+  },
+  {
+    category: "SAT",
+    className: "정규반",
+    columns: ["유형", "이름", "반", "단어시험", "1교시", "2교시"],
+  },
+  {
+    category: "SAT",
+    className: "실전반",
+    columns: ["유형", "이름", "반", "단어시험", "1교시", "2교시"],
   },
 ];
 
 const attendanceValues = ["출석", "결석", "기타", "병결"];
 
-function resetTeacherAttendanceSheet() {
-  const studentTable = getStudentTable();
-  const students = studentTable.getAll();
+function resetTeacherSheet() {
+  // Get all students
+  const dbSpreadsheet = getDBSpreadsheet();
+  const studentSheet = dbSpreadsheet.getSheetByName(DB_SHEET_NAMES.STUDENT);
+  const studentDataGrid = new DataGridV2(
+    studentSheet,
+    COLUMN_HEADERS.STUDENT.NAME
+  );
+  const students = getAllStudents(studentDataGrid);
 
-  for (let format of attendanceSheetFormat) {
+  // Get Manager Spreadsheet
+  const managerSpreadSheet = getManagerSpreadsheet();
+
+  // For every classroom
+  for (let schema of managerSheetSchema) {
     const targetStudents = students.filter(
-      (student) => student.classroom == format.className
+      (student) =>
+        student.classroom == schema.className &&
+        student.category == schema.category
     );
-    const studentNames = targetStudents.map((student) => student.name);
-
-    const attendanceDataGrid = new DataGrid(
-      getTeacherSpreadsheet(),
-      `${format.className} 출석`,
-      format.columns,
-      "이름"
+    const studentNames = targetStudents.map((s) => s.name);
+    const sheet = managerSpreadSheet.getSheetByName(
+      `${schema.category} ${schema.className}`
     );
+    const managerDataGrid = new DataGridV2(sheet, COLUMN_HEADERS.STUDENT.NAME);
 
-    attendanceDataGrid.reset();
-    attendanceDataGrid.setIdColumns(studentNames);
+    // Reset Table(Sheet)
+    managerDataGrid.clearContents();
+    managerDataGrid.clearDataValidations();
+
+    // Set Headers
+    for (const header of schema.columns) {
+      managerDataGrid.addHeader(header);
+    }
+    managerDataGrid.paint();
+
+    // Set student names
+    for (const name of studentNames) {
+      managerDataGrid.addRow(name);
+    }
+    managerDataGrid.paint();
 
     for (let student of targetStudents) {
-      for (let column of format.columns) {
+      for (let column of schema.columns) {
         switch (column) {
           case "이름":
             break;
+          case "단어시험":
+            break;
+          case "유형":
+            managerDataGrid.setValue(student.name, column, student.category);
+            break;
           case "반":
-            attendanceDataGrid.setValue(
-              student.name,
-              column,
-              student.classroom
-            );
+            managerDataGrid.setValue(student.name, column, student.classroom);
             break;
           default:
-            attendanceDataGrid.setDropdown(
-              student.name,
-              column,
-              attendanceValues
-            );
+            managerDataGrid.setDropdown(student.name, column, attendanceValues);
         }
       }
     }
 
-    attendanceDataGrid.paint();
+    managerDataGrid.paint();
   }
 }
 
-function getAttendanceListFromTeacherSheet() {
-  const attendanceList: Attendance[] = [];
-  for (let format of attendanceSheetFormat) {
-    const attendanceDataGrid = new DataGrid(
-      getTeacherSpreadsheet(),
-      `${format.className} 출석`,
-      format.columns,
-      "이름"
-    );
+function updateDataFromManagerSheet() {
+  // Get all students
+  const dbSpreadsheet = getDBSpreadsheet();
 
-    const studentNames = attendanceDataGrid
-      .getIdColumns()
-      .slice(1)
-      .filter(hasValues);
+  const wordTestScoreSheet = dbSpreadsheet.getSheetByName(
+    DB_SHEET_NAMES.WORD_TEST_SCORE
+  );
+  const wordTestScoreDataGrid = new DataGridV2(
+    wordTestScoreSheet,
+    COLUMN_HEADERS.STUDENT.NAME
+  );
+
+  const attendanceSheet = dbSpreadsheet.getSheetByName(
+    DB_SHEET_NAMES.ATTENDANCE
+  );
+  const attendanceDataGrid = new DataGridV2(
+    attendanceSheet,
+    COLUMN_HEADERS.STUDENT.NAME
+  );
+
+  const managerSpreadsheet = getManagerSpreadsheet();
+
+  for (let schema of managerSheetSchema) {
+    const sheet = managerSpreadsheet.getSheetByName(
+      `${schema.category} ${schema.className}`
+    );
+    const managerDataGrid = new DataGridV2(sheet, COLUMN_HEADERS.STUDENT.NAME);
+
+    const studentNames = managerDataGrid.getAllIds();
 
     for (let name of studentNames) {
-      for (let column of format.columns) {
+      for (let column of schema.columns) {
         switch (column) {
           case "이름":
           case "반":
+          case "유형":
+            break;
+          case "단어시험":
+            const rawScore = managerDataGrid.getValue(name, column);
+            wordTestScoreDataGrid.setValue(name, getTodayDate(), rawScore);
             break;
           default:
-            const state = attendanceDataGrid.getValue(name, column);
-            const attendance: Attendance = {
-              name: name,
-              date: getTodayDate(),
-              period: column,
-              attendance: state,
-            };
-            attendanceList.push(attendance);
+            const state = managerDataGrid.getValue(name, column);
+            attendanceDataGrid.setValue(
+              name,
+              `${getTodayDate()} ${column}`,
+              state
+            );
         }
       }
     }
+    wordTestScoreDataGrid.paint();
+    attendanceDataGrid.paint();
   }
-  return attendanceList;
-}
-
-function updateAttendance() {
-  const attendanceList = getAttendanceListFromTeacherSheet();
-  const attendanceTable = getAttendanceTable();
-  attendanceTable.insertBatch(attendanceList);
 }
 
 function getTodayDate() {

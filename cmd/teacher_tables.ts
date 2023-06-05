@@ -1,3 +1,3 @@
-function getTeacherSpreadsheet() {
-  return SpreadsheetApp.openById(TEACHER_SHEET_ID);
+function getManagerSpreadsheet() {
+  return SpreadsheetApp.openById(MANAGER_SHEET_ID);
 }

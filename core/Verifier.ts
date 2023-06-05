@@ -17,6 +17,11 @@ function genderVerifier(value: string) {
     throw `Gender Verifier - ${value} is not a gender`;
 }
 
+function categoryVerifier(value: string) {
+  if (value !== "TOEFL" && value !== "SAT")
+    throw `Category Verifier - ${value} is not a correct category`;
+}
+
 type Verifier = (value: string) => void;
 
 const VERIFIER = {
@@ -24,4 +29,5 @@ const VERIFIER = {
   NUMBER: numberVerifier,
   TEXT: textVerifier,
   GENDER: genderVerifier,
+  CATEGORY: categoryVerifier,
 };

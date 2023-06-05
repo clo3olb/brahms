@@ -5,6 +5,7 @@ function onDBOpen() {
       ui
         .createMenu("학습TA 관리자 패널")
         .addItem("출석시트 새로고침", "resetTeacherAttendanceSheet")
+        .addItem("출석시트 DB로 전송", "updateAttendance")
     )
     .addToUi();
 }

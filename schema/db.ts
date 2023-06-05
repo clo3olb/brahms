@@ -1,19 +1,15 @@
 type Gender = "남" | "여";
-type Classroom = "도약반" | "향상반" | "정규반";
-
-type Student = {
-  id: number;
-  name: string;
-  classroom: Classroom;
-  gender: Gender;
-  age: number;
-  parentEmail: string;
-};
+type Classroom = "도약반" | "인터반" | "정규반" | "실전반";
+type Category = "SAT" | "TOEFL";
 
 const StudentTableSchema: TableSchema<Student> = {
   id: {
     header: "ID",
     verifier: VERIFIER.TEXT,
+  },
+  category: {
+    header: "유형",
+    verifier: VERIFIER.CATEGORY,
   },
   name: {
     header: "이름",
@@ -38,7 +34,7 @@ const StudentTableSchema: TableSchema<Student> = {
 };
 
 type WordTestScore = {
-  id: number;
+  id: string;
   name: string;
   date: string;
   score: number;
@@ -85,6 +81,6 @@ const DBAttendanceTableSchema: TableSchema<Attendance> = {
   },
   attendance: {
     header: "출석",
-    verifier: VERIFIER.NUMBER,
+    verifier: VERIFIER.TEXT,
   },
 };
