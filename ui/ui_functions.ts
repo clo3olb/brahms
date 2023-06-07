@@ -39,6 +39,38 @@ const managerPanelSchema: ClassManagementPanelSchema[] = [
 
 const attendanceChoices = ["출석", "결석", "병결", "기타"];
 
+function recoverManagerPanelFromDB() {
+  const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
+  const managerPanelSpreadsheet = SpreadsheetApp.openById(MANAGER_SHEET_ID);
+
+  const metadataTable = getManagerPanelMetadataTable(managerPanelSpreadsheet);
+  const dateStr = metadataTable.getValue("날짜", "값");
+
+  const wordTestTable = getDBWordTestTable(dbSpreadsheet);
+  const attendanceTable = getDBAttendanceTable(dbSpreadsheet);
+
+  for (const schema of managerPanelSchema) {
+    const sheetName = `${schema.category} ${schema.classroom}`;
+    const sheet = managerPanelSpreadsheet.getSheetByName(sheetName);
+    const table = new Table(sheet, "이름", 1);
+    const studentNames = table.getIds();
+
+    for (const name of studentNames) {
+      // Word Test Scores
+      const score = wordTestTable.getValue(name, dateStr);
+      table.setValue(name, "단어시험", score);
+
+      // Attendances
+      for (const timeslot of schema.timeslots) {
+        const header = createAttendanceHeader(dateStr, timeslot);
+        const attendance = attendanceTable.getValue(name, header);
+        table.setValue(name, timeslot, attendance);
+      }
+      table.paint();
+    }
+  }
+}
+
 function resetManagerPanel() {
   const managerSpreadsheet = SpreadsheetApp.openById(MANAGER_SHEET_ID);
   const students = getStudents();
@@ -54,8 +86,7 @@ function resetManagerPanel() {
     resetClassManagerPanel(sheet, filteredStudents, schema.timeslots);
   }
 
-  const metadataSheet = managerSpreadsheet.getSheetByName("Metadata");
-  const metadataTable = new Table(metadataSheet, "항목", 1);
+  const metadataTable = getManagerPanelMetadataTable(managerSpreadsheet);
   metadataTable.setValue("날짜", "값", getTodayDateString());
   metadataTable.paint();
 }
@@ -94,23 +125,19 @@ function resetClassManagerPanel(
 
   table.paint();
 
-  basicSort(table);
   basicColor(table);
 }
 
 function updateDB() {
   const managerSpreadsheet = SpreadsheetApp.openById(MANAGER_SHEET_ID);
-  const metadataSheet = managerSpreadsheet.getSheetByName("Metadata");
-  const metadataTable = new Table(metadataSheet, "항목", 1);
+  const metadataTable = getManagerPanelMetadataTable(managerSpreadsheet);
   const today = metadataTable.getValue("날짜", "값");
 
   const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
 
-  const wordTestSheet = dbSpreadsheet.getSheetByName("단어시험");
-  const wordTestTable = new Table(wordTestSheet, "이름", 1);
+  const wordTestTable = getDBWordTestTable(dbSpreadsheet);
 
-  const attendanceSheet = dbSpreadsheet.getSheetByName("출석");
-  const attendanceTable = new Table(attendanceSheet, "이름", 1);
+  const attendanceTable = getDBAttendanceTable(dbSpreadsheet);
 
   for (const schema of managerPanelSchema) {
     const sheetName = `${schema.category} ${schema.classroom}`;
@@ -129,7 +156,7 @@ function updateDB() {
       for (const timeslot of schema.timeslots) {
         const state = classTable.getValue(name, timeslot);
         if (state) {
-          const header = `${today} - ${timeslot}`;
+          const header = createAttendanceHeader(today, timeslot);
           attendanceTable.setValue(name, header, state);
         }
       }
@@ -145,11 +172,9 @@ function syncDBWithStudentInfo() {
 
   const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
 
-  const wordTestSheet = dbSpreadsheet.getSheetByName("단어시험");
-  const wordTestTable = new Table(wordTestSheet, "이름", 1);
+  const wordTestTable = getDBWordTestTable(dbSpreadsheet);
 
-  const attendanceSheet = dbSpreadsheet.getSheetByName("출석");
-  const attendanceTable = new Table(attendanceSheet, "이름", 1);
+  const attendanceTable = getDBAttendanceTable(dbSpreadsheet);
 
   const wordTestStudentNames = wordTestTable.getIds();
   const attendanceStudentNames = attendanceTable.getIds();
@@ -181,14 +206,11 @@ function updateStudentEssentials(table: Table, student: Student) {
 function styleDB() {
   const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
 
-  const studentSheet = dbSpreadsheet.getSheetByName("학생");
-  const studentTable = new Table(studentSheet, "이름", 1);
+  const studentTable = getDBStudentTable(dbSpreadsheet);
 
-  const wordTestSheet = dbSpreadsheet.getSheetByName("단어시험");
-  const wordTestTable = new Table(wordTestSheet, "이름", 1);
+  const wordTestTable = getDBWordTestTable(dbSpreadsheet);
 
-  const attendanceSheet = dbSpreadsheet.getSheetByName("출석");
-  const attendanceTable = new Table(attendanceSheet, "이름", 1);
+  const attendanceTable = getDBAttendanceTable(dbSpreadsheet);
 
   basicSort(studentTable);
   basicColor(studentTable);
@@ -198,4 +220,52 @@ function styleDB() {
 
   basicSort(attendanceTable);
   basicColor(attendanceTable);
+}
+
+function sendWordTestScoreMessage() {
+  const today = getTodayDateString();
+
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    "알림",
+    `${today} 단어시험 결과를 문자로 발송하시겠습니까?`,
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (response != ui.Button.OK) return;
+
+  const students = getStudents();
+  const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
+  const wordTestScoreSheet = dbSpreadsheet.getSheetByName("단어시험");
+  const wordTestScoreTable = new Table(wordTestScoreSheet, "이름", 1);
+  const messageTemplateSheet = dbSpreadsheet.getSheetByName("메세지 템플릿");
+  const messageTemplateTable = new Table(
+    messageTemplateSheet,
+    "메세지 종류",
+    1
+  );
+  const messageLogTable = getDBMessageLogTable(dbSpreadsheet);
+
+  const wordTestScoreMessageTemplate = messageTemplateTable.getValue(
+    "단어시험",
+    "템플릿"
+  );
+  const messageSender = new MessageSender(
+    "RANDOM_STRING",
+    "RANDOM_STRING",
+    "RANDOM_STRING",
+    "RANDOM_STRING",
+    messageLogTable
+  );
+
+  for (const student of students) {
+    const score = wordTestScoreTable.getValue(student.name, today);
+    const message = createMessageFromTemplate(
+      wordTestScoreMessageTemplate,
+      student,
+      { score: score }
+    );
+    messageSender.send(message, student.parentPhoneNumber);
+    Logger.log(message);
+  }
 }

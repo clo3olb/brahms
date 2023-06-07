@@ -5,6 +5,7 @@ function onOpen() {
       ui
         .createMenu("관리자 패널")
         .addItem("관리자 패널 초기화", "resetManagerPanel")
+        .addItem("관리자 패널 복구", "recoverManagerPanelFromDB")
     )
     .addSeparator()
     .addSubMenu(
@@ -18,6 +19,11 @@ function onOpen() {
         )
         .addItem("정렬 및 서식 적용", "styleDB")
     )
+    .addSubMenu(
+      ui
+        .createMenu("메세지 전송")
+        .addItem("단어시험 메세지 전송", "sendWordTestScoreMessage")
+    )
     .addToUi();
 }
 
@@ -28,8 +34,20 @@ function addMenuTrigger() {
   ScriptApp.newTrigger("onOpen").forSpreadsheet(spreadsheet).onOpen().create();
 }
 
-function onEdit(e) {
-  updateDB();
+function onEdit(e: GoogleAppsScript.Events.SheetsOnEdit) {
+  const sheetName = e.range.getSheet().getName();
+  switch (sheetName) {
+    case "TOEFL 도약반":
+    case "TOEFL 인터반":
+    case "TOEFL 정규반":
+    case "TOEFL 실전반":
+    case "SAT 정규반":
+    case "SAT 실전반":
+      updateDB();
+      break;
+    default:
+      break;
+  }
 }
 
 function addSyncTrigger() {
@@ -44,4 +62,8 @@ function removeAllTriggers() {
   for (const trigger of triggers) {
     ScriptApp.deleteTrigger(trigger);
   }
+}
+
+function createUUID() {
+  return Utilities.getUuid();
 }

@@ -5,7 +5,8 @@ type Student = {
   classroom: string;
   grade: string;
   gender: string;
-  parent_email: string;
+  parentEmail: string;
+  parentPhoneNumber: string;
 };
 
 function getStudents() {
@@ -23,7 +24,8 @@ function getStudents() {
       classroom: table.getValue(name, "반"),
       grade: table.getValue(name, "학년"),
       gender: table.getValue(name, "성별"),
-      parent_email: table.getValue(name, "부모님 이메일"),
+      parentEmail: table.getValue(name, "부모님 이메일"),
+      parentPhoneNumber: table.getValue(name, "부모님 전화번호"),
     });
   }
 
@@ -84,4 +86,76 @@ function basicColor(table: Table) {
       }
     }
   }
+}
+
+function createMessageFromTemplate(
+  template: string,
+  student: Student,
+  values?: object
+) {
+  let message = template;
+  if (values) {
+    const keys = Object.keys(values);
+    for (const key of keys) {
+      const regex = new RegExp(`\{\{${key}\}\}`, "g");
+      message = message.replace(regex, values[key]);
+    }
+  }
+
+  message = message.replace(/\{\{name\}\}/g, student.name);
+  message = message.replace(/\{\{category\}\}/g, student.category);
+  message = message.replace(/\{\{classroom\}\}/g, student.classroom);
+  message = message.replace(/\{\{gender\}\}/g, student.gender);
+  message = message.replace(/\{\{grade\}\}/g, student.grade);
+  message = message.replace(/\{\{id\}\}/g, student.id);
+  message = message.replace(/\{\{parentEmail\}\}/g, student.parentEmail);
+  message = message.replace(
+    /\{\{parentPhoneNumber\}\}/g,
+    student.parentPhoneNumber
+  );
+  return message;
+}
+
+function getManagerPanelMetadataTable(
+  managerPanelSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const metadataSheet = managerPanelSpreadsheet.getSheetByName("Metadata");
+  const metadataTable = new Table(metadataSheet, "항목", 1);
+  return metadataTable;
+}
+
+function getDBWordTestTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const wordTestSheet = dbSpreadsheet.getSheetByName("단어시험");
+  const wordTestTable = new Table(wordTestSheet, "이름", 1);
+  return wordTestTable;
+}
+
+function getDBStudentTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const studentSheet = dbSpreadsheet.getSheetByName("학생");
+  const studentTable = new Table(studentSheet, "이름", 1);
+  return studentTable;
+}
+
+function getDBAttendanceTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const attendanceSheet = dbSpreadsheet.getSheetByName("출석");
+  const attendanceTable = new Table(attendanceSheet, "이름", 1);
+  return attendanceTable;
+}
+
+function getDBMessageLogTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const messageLogSheet = dbSpreadsheet.getSheetByName("메세지 로그");
+  const messageLogTable = new Table(messageLogSheet, "메세지 ID", 1);
+  return messageLogTable;
+}
+
+function createAttendanceHeader(date: string, timeslot: string) {
+  return `${date} - ${timeslot}`;
 }
