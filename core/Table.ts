@@ -65,7 +65,7 @@ class Table {
     const range = this.sheet.getRange(
       this.headerRowIndex + 1,
       1,
-      this.sheet.getMaxRows() - this.headerRowIndex - 1,
+      this.sheet.getMaxRows() - this.headerRowIndex,
       this.sheet.getMaxColumns()
     );
 
