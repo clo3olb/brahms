@@ -7,6 +7,7 @@ type Student = {
   gender: string;
   parentEmail: string;
   parentPhoneNumber: string;
+  math: string;
 };
 
 function getStudents() {
@@ -26,6 +27,7 @@ function getStudents() {
       gender: table.getValue(name, "성별"),
       parentEmail: table.getValue(name, "부모님 이메일"),
       parentPhoneNumber: table.getValue(name, "부모님 전화번호"),
+      math: table.getValue(name, "수학"),
     });
   }
 
@@ -154,6 +156,14 @@ function getDBMessageLogTable(
   const messageLogSheet = dbSpreadsheet.getSheetByName("메세지 로그");
   const messageLogTable = new Table(messageLogSheet, "메세지 ID", 1);
   return messageLogTable;
+}
+
+function getDBMeritPointListTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const meritPointSheet = dbSpreadsheet.getSheetByName("상벌점 목록");
+  const meritPointTable = new Table(meritPointSheet, "#", 1);
+  return meritPointTable;
 }
 
 function createAttendanceHeader(date: string, timeslot: string) {
