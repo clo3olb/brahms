@@ -148,22 +148,25 @@ class Table {
     this.sync();
   }
 
+  public addHeader(header: string) {
+    if (this.getHeaderRow().length == this.sheet.getMaxColumns()) {
+      this.sheet.insertColumnAfter(this.sheet.getMaxColumns());
+      this.paint();
+      this.sync();
+    }
+
+    const headerRow = this.getHeaderRow();
+    const headerRowWithValues = headerRow.filter(
+      (v) => v != "" && v != undefined
+    );
+    const newHeaderColumnIndex = headerRowWithValues.length;
+    headerRow[newHeaderColumnIndex] = header;
+  }
+
   public setValue(id: string, header: string, value: string | number) {
     if (this.getColumnIndex(header) < 0) {
       // There is no header in the table. Should make new one.
-      if (this.getHeaderRow().length == this.sheet.getMaxColumns()) {
-        this.sheet.insertColumnAfter(this.sheet.getMaxColumns());
-        this.paint();
-        this.sync();
-      }
-
-      const headerRow = this.getHeaderRow();
-      const headerRowWithValues = headerRow.filter(
-        (v) => v != "" && v != undefined
-      );
-      const newHeaderColumnIndex = headerRowWithValues.length;
-      headerRow[newHeaderColumnIndex] = header;
-
+      this.addHeader(header);
       this.paint();
     }
 
