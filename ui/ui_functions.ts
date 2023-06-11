@@ -8,32 +8,32 @@ const managerPanelSchema: ClassManagementPanelSchema[] = [
   {
     category: "TOEFL",
     classroom: "도약반",
-    timeslots: ["1교시", "2교시", "3교시"],
+    timeslots: ["1교시", "2교시", "3교시", "4교시"],
   },
   {
     category: "TOEFL",
     classroom: "인터반",
-    timeslots: ["1교시", "2교시", "3교시"],
+    timeslots: ["1교시", "2교시", "3교시", "4교시"],
   },
   {
     category: "TOEFL",
     classroom: "정규반",
-    timeslots: ["1교시", "2교시", "3교시"],
+    timeslots: ["1교시", "2교시", "3교시", "4교시"],
   },
   {
     category: "TOEFL",
     classroom: "실전반",
-    timeslots: ["1교시", "2교시", "3교시"],
+    timeslots: ["1교시", "2교시", "3교시", "4교시"],
   },
   {
-    category: "SAT",
-    classroom: "정규반",
-    timeslots: ["1교시", "2교시", "3교시"],
+    category: "Math",
+    classroom: "Algebra 2",
+    timeslots: ["자습1", "자습2"],
   },
   {
-    category: "SAT",
-    classroom: "실전반",
-    timeslots: ["1교시", "2교시", "3교시"],
+    category: "Math",
+    classroom: "Geometry",
+    timeslots: ["자습1", "자습2"],
   },
 ];
 
@@ -60,6 +60,9 @@ function recoverManagerPanelFromDB() {
       const score = wordTestTable.getValue(name, dateStr);
       table.setValue(name, "단어시험", score);
 
+      const retestScore = wordTestTable.getValue(name, `${dateStr}(재)`);
+      table.setValue(name, "재시험", retestScore);
+
       // Attendances
       for (const timeslot of schema.timeslots) {
         const header = createAttendanceHeader(dateStr, timeslot);
@@ -80,10 +83,10 @@ function resetManagerPanel() {
     const sheet = managerSpreadsheet.getSheetByName(sheetName);
     const filteredStudents = students.filter(
       (student) =>
-        student.category == schema.category &&
-        student.classroom == schema.classroom
+        student.classroom == schema.classroom ||
+        student.math == schema.classroom
     );
-    resetClassManagerPanel(sheet, filteredStudents, schema.timeslots);
+    resetClassManagerPanel(sheet, filteredStudents, schema);
   }
 
   const metadataTable = getManagerPanelMetadataTable(managerSpreadsheet);
@@ -94,17 +97,19 @@ function resetManagerPanel() {
 function resetClassManagerPanel(
   sheet: GoogleAppsScript.Spreadsheet.Sheet,
   students: Student[],
-  timeslots: string[]
+  schema: ClassManagementPanelSchema
 ) {
   const table = new Table(sheet, "이름", 1);
 
   table.clearContents();
   table.clearDataValidations();
 
-  table.setHeaders(
-    ["ID", "유형", "반", "이름", "학년", "성별", "단어시험", ...timeslots],
-    1
-  );
+  table.setHeaders(["ID", "유형", "반", "이름", "학년", "성별", "수학"], 1);
+  if (schema.category == "TOEFL") {
+    table.addHeader("단어시험");
+    table.addHeader("재시험");
+  }
+  schema.timeslots.forEach((timeslot) => table.addHeader(timeslot));
   table.paint();
 
   const names = students.map((student) => student.name);
@@ -118,7 +123,7 @@ function resetClassManagerPanel(
     table.setValue(student.name, "학년", student.grade);
     table.setValue(student.name, "성별", student.gender);
 
-    for (const timeslot of timeslots) {
+    for (const timeslot of schema.timeslots) {
       table.setDropdown(student.name, timeslot, attendanceChoices);
     }
   }
@@ -150,6 +155,10 @@ function updateDB() {
       const score = classTable.getValue(name, "단어시험");
       if (score) {
         wordTestTable.setValue(name, today, score);
+      }
+      const retestScore = classTable.getValue(name, "재시험");
+      if (retestScore) {
+        wordTestTable.setValue(name, `${today}(재)`, retestScore);
       }
 
       // Update Attendance
@@ -268,4 +277,45 @@ function sendWordTestScoreMessage() {
     messageSender.send(message, student.parentPhoneNumber);
     Logger.log(message);
   }
+}
+
+function updateMeritPointsForm() {
+  const FORM_ID = "1E8FaU4Ayh2rWbDBcWrdCEsLPyTpxoQnetTMJaBwS6D8";
+  const form = FormApp.openById(FORM_ID);
+
+  const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
+  const meritPointTable = getDBMeritPointListTable(dbSpreadsheet);
+  const students = getStudents();
+
+  const ids = meritPointTable.getIds();
+  const pointList = ids.map((id) => ({
+    reason: meritPointTable.getValue(id, "사유"),
+    category: meritPointTable.getValue(id, "유형"),
+    point: meritPointTable.getValue(id, "점수"),
+  }));
+
+  const items = form.getItems();
+
+  // 상벌점 사유 자동 업데이트
+  const meritPointList = pointList.filter((p) => p.category == "상점");
+  const demeritPointList = pointList.filter((p) => p.category == "벌점");
+
+  const meritPointValues = meritPointList.map((p) => `${p.reason}(${p.point})`);
+  const demeritPointValues = demeritPointList.map(
+    (p) => `${p.reason}(${p.point})`
+  );
+
+  const meritPointItem = items.find((item) => item.getTitle() == "상점사유");
+  const demeritPointItem = items.find((item) => item.getTitle() == "벌점사유");
+  meritPointItem.asMultipleChoiceItem().setChoiceValues(meritPointValues);
+  demeritPointItem.asMultipleChoiceItem().setChoiceValues(demeritPointValues);
+
+  // 이름 정규식 업데이트
+  const nameItem = items.find((item) => item.getTitle() == "학생 이름");
+  const studentNames = students.map((s) => s.name);
+  const studentNamesRegexPattern = `(${studentNames.join(`|`)})`;
+  const rule = FormApp.createTextValidation()
+    .requireTextMatchesPattern(studentNamesRegexPattern)
+    .build();
+  nameItem.asTextItem().setValidation(rule);
 }
