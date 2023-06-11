@@ -21,6 +21,11 @@ function onOpen() {
     )
     .addSubMenu(
       ui
+        .createMenu("상벌점")
+        .addItem("상벌점 설문지 동기화", "updateMeritPointsForm")
+    )
+    .addSubMenu(
+      ui
         .createMenu("메세지 전송")
         .addItem("단어시험 메세지 전송", "sendWordTestScoreMessage")
     )
@@ -66,4 +71,15 @@ function removeAllTriggers() {
 
 function createUUID() {
   return Utilities.getUuid();
+}
+
+function addMeritPointFormOnSubmitTrigger() {
+  // Find form and add trigger 'onMeritPointFormSubmit'
+}
+
+function onMeritPointFormSubmit(
+  event: GoogleAppsScript.Events.FormsOnFormSubmit
+) {
+  const response = event.response;
+  response.getItemResponses()[0].getResponse();
 }
