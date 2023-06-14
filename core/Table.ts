@@ -4,11 +4,12 @@ type SortSpec = {
 };
 
 class Table {
-  sheet: GoogleAppsScript.Spreadsheet.Sheet;
-  range: GoogleAppsScript.Spreadsheet.Range;
-  values: any[][];
-  idHeader: any;
-  headerRowIndex: number;
+  private sheet: GoogleAppsScript.Spreadsheet.Sheet;
+  private range: GoogleAppsScript.Spreadsheet.Range;
+  private values: any[][];
+  private idHeader: any;
+  private headerRowIndex: number;
+  private formulas: string[][];
 
   constructor(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
@@ -20,6 +21,7 @@ class Table {
     this.headerRowIndex = headerRowIndex;
     this.range = null;
     this.values = null;
+    this.formulas = null;
   }
 
   public colorRow(id: string, color: string) {
@@ -143,13 +145,21 @@ class Table {
     // This means that there has been no change in values.
     if (!this.range || !this.values) return;
 
+    for (let row = 0; row < this.values.length; row++) {
+      for (let col = 0; col < this.values[row].length; col++) {
+        if (this.formulas[row][col] != "") {
+          this.values[row][col] = this.formulas[row][col];
+        }
+      }
+    }
+
     this.range.setValues(this.values);
     SpreadsheetApp.flush();
     this.sync();
   }
 
   public addHeader(header: string) {
-    if (this.getHeaderRow().length == this.sheet.getMaxColumns()) {
+    if (this.getHeaderRow().findIndex((header) => header == "") < 0) {
       this.sheet.insertColumnAfter(this.sheet.getMaxColumns());
       this.paint();
       this.sync();
@@ -217,6 +227,7 @@ class Table {
       this.sheet.getMaxColumns()
     );
     if (!this.range) throw ` Error`;
-    this.values = this.range.getDisplayValues();
+    this.values = this.range.getValues();
+    this.formulas = this.range.getFormulas();
   }
 }
