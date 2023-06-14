@@ -8,6 +8,9 @@ type Student = {
   parentEmail: string;
   parentPhoneNumber: string;
   math: string;
+  meritPoints: string;
+  demeritPoints: string;
+  meritPointsTotal: string;
 };
 
 function getStudents() {
@@ -28,20 +31,27 @@ function getStudents() {
       parentEmail: table.getValue(name, "부모님 이메일"),
       parentPhoneNumber: table.getValue(name, "부모님 전화번호"),
       math: table.getValue(name, "수학"),
+      meritPoints: table.getValue(name, "상점"),
+      demeritPoints: table.getValue(name, "벌점"),
+      meritPointsTotal: table.getValue(name, "상벌점"),
     });
   }
 
   return students;
 }
 
-function getTodayDateString() {
-  const today = new Date(Date.now());
+function toDateString(dateObj: Date) {
+  const today = new Date(dateObj);
   const year = today.getFullYear();
   const month = today.getMonth() + 1;
   const date = today.getDate();
 
   return `${month}월 ${date}일`;
   //   return `${year}년 ${month}월 ${date}일`;
+}
+
+function getTodayDateString() {
+  return toDateString(new Date());
 }
 
 function basicSort(table: Table) {
