@@ -156,7 +156,7 @@ function resetClassManagerPanel(
 function updateDB() {
   const managerSpreadsheet = SpreadsheetApp.openById(MANAGER_SHEET_ID);
   const metadataTable = getManagerPanelMetadataTable(managerSpreadsheet);
-  const today = metadataTable.getValue("날짜", "값");
+  const today = toDateString(new Date(metadataTable.getValue("날짜", "값")));
 
   const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
 
