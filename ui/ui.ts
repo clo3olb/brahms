@@ -12,19 +12,29 @@ function onOpen(event: GoogleAppsScript.Events.SheetsOnOpen) {
   ui.createMenu("관리자 도구")
     .addSubMenu(
       ui
-        .createMenu("관리자 패널")
-        .addItem("관리자 패널 초기화", "resetManagerPanel")
-        .addItem("관리자 패널 복구", "recoverManagerPanelFromDB")
-    )
-    .addSeparator()
-    .addSubMenu(
-      ui
         .createMenu("DB")
         .addSubMenu(
           ui
-            .createMenu("업데이트")
-            .addItem(" 관리자 패널 -> DB", "updateDB")
-            .addItem(" DB 학생 -> DB 전체", "syncDBWithStudentInfo")
+            .createMenu("음성캠퍼스")
+            .addItem("[음성] 관리자 패널 동기화", "updateDB")
+            .addItem("[음성] 학생 시트 전체 동기화", "syncDBWithStudentInfo")
+            .addItem(
+              "[음성] 관리자 패널 반별시트 새로고침",
+              "resetManagerPanel"
+            )
+            .addItem(
+              "[음성] 관리자 패널 데이터 복구",
+              "recoverManagerPanelFromDB"
+            )
+            .addItem("[음성] 관리자 패널 새로고침", "resetManagerPanel")
+        )
+        .addSubMenu(
+          ui
+            .createMenu("미국캠퍼스")
+            .addItem("[미국] 관리자 패널 동기화", "updateDB_1")
+            .addItem("[미국] 학생 시트 전체 동기화", "syncDBWithStudentInfo_1")
+            .addItem("[미국] 관리자 패널 초기화", "resetManagerPanel_1")
+            .addItem("[미국] 관리자 패널 복구", "recoverManagerPanelFromDB_1")
         )
         .addItem("정렬 및 서식 적용", "styleDB")
     )
