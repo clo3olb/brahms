@@ -6,7 +6,7 @@ const AUTH_EMAIL_LIST = [
 
 function onOpen(event: GoogleAppsScript.Events.SheetsOnOpen) {
   const email = event.user.getEmail();
-  if (!AUTH_EMAIL_LIST.includes(email)) return;
+  // if (!AUTH_EMAIL_LIST.includes(email)) return;
 
   const ui = SpreadsheetApp.getUi();
   ui.createMenu("관리자 도구")
