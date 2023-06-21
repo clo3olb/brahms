@@ -166,11 +166,17 @@ class Table {
     }
 
     const headerRow = this.getHeaderRow();
-    const headerRowWithValues = headerRow.filter(
-      (v) => v != "" && v != undefined
-    );
-    const newHeaderColumnIndex = headerRowWithValues.length;
-    headerRow[newHeaderColumnIndex] = header;
+
+    // find new index for inserting header
+    let newIndex = -1;
+    for (let i = headerRow.length - 1; i >= 0; i--) {
+      if (headerRow != undefined && headerRow[i].trim() != "") {
+        newIndex = i + 1;
+        break;
+      }
+    }
+
+    headerRow[newIndex] = header;
   }
 
   public setValue(id: string, header: string, value: string | number) {
