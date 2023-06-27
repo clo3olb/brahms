@@ -13,8 +13,7 @@ type Student = {
   meritPointsTotal: string;
 };
 
-function getStudents() {
-  const dbSpreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
+function getStudents(dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet) {
   const sheet = dbSpreadsheet.getSheetByName("학생");
   const table = new Table(sheet, "이름", 1);
   const names = table.getIds();
@@ -168,12 +167,40 @@ function getDBMessageLogTable(
   return messageLogTable;
 }
 
+function getDBMessageTemplateTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const messageTemplateSheet = dbSpreadsheet.getSheetByName("메세지 템플릿");
+  const messageTemplateTable = new Table(
+    messageTemplateSheet,
+    "메세지 종류",
+    1
+  );
+  return messageTemplateTable;
+}
+
 function getDBMeritPointListTable(
   dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
 ) {
   const meritPointSheet = dbSpreadsheet.getSheetByName("상벌점 목록");
   const meritPointTable = new Table(meritPointSheet, "#", 1);
   return meritPointTable;
+}
+function getDBMetadataTable(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const metadataSheet = dbSpreadsheet.getSheetByName("Metadata");
+  const metadataTable = new Table(metadataSheet, "항목", 1);
+  return metadataTable;
+}
+
+function getManagerPanelSpreadsheet(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const metadataTable = getDBMetadataTable(dbSpreadsheet);
+  const managerPanelID = metadataTable.getValue("관리자 패널 ID", "값");
+  const managerPanelSpreadsheet = SpreadsheetApp.openById(managerPanelID);
+  return managerPanelSpreadsheet;
 }
 
 function createAttendanceHeader(date: string, timeslot: string) {

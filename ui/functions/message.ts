@@ -65,3 +65,46 @@ class MessageSender {
     this.logTable.paint();
   }
 }
+
+function sendWordTestScoreMessage(
+  dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet
+) {
+  const today = getTodayDateString();
+
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    "알림",
+    `${today} 단어시험 결과를 문자로 발송하시겠습니까?`,
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (response != ui.Button.OK) return;
+
+  const students = getStudents(dbSpreadsheet);
+  const wordTestScoreTable = getDBWordTestTable(dbSpreadsheet);
+  const messageTemplateTable = getDBMessageTemplateTable(dbSpreadsheet);
+  const messageLogTable = getDBMessageLogTable(dbSpreadsheet);
+
+  const wordTestScoreMessageTemplate = messageTemplateTable.getValue(
+    "단어시험",
+    "템플릿"
+  );
+  const messageSender = new MessageSender(
+    "RANDOM_STRING",
+    "RANDOM_STRING",
+    "RANDOM_STRING",
+    "RANDOM_STRING",
+    messageLogTable
+  );
+
+  for (const student of students) {
+    const score = wordTestScoreTable.getValue(student.name, today);
+    const message = createMessageFromTemplate(
+      wordTestScoreMessageTemplate,
+      student,
+      { score: score }
+    );
+    messageSender.send(message, student.parentPhoneNumber);
+    Logger.log(message);
+  }
+}

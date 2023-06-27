@@ -1,3 +1,5 @@
-const DB_SHEET_ID = "1-ykYEKPxwDyGVvUoSjTU3_23n55hqsi9xPAIGbER1jA";
+const ES_DB_SHEET_ID = "1-ykYEKPxwDyGVvUoSjTU3_23n55hqsi9xPAIGbER1jA";
+const US_DB_SHEET_ID = "115Fuc4Icu9yr9ZzQQi1yMv05mV_87wuTg_CBksqOXJw";
 const MANAGER_SHEET_ID = "1-GwqLoAmFAMtTiCdblyty38_dAm8JwMLhKVWUTiunfo";
-const MERIT_FORM_ID = "1E8FaU4Ayh2rWbDBcWrdCEsLPyTpxoQnetTMJaBwS6D8";
+const ES_MERIT_FORM_ID = "1E8FaU4Ayh2rWbDBcWrdCEsLPyTpxoQnetTMJaBwS6D8";
+const US_MERIT_FORM_ID = "1HjQuX1Fh-zjH9t5Lk89QkNs_GeTqmTI3jpVz4g3hSn4";

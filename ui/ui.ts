@@ -5,46 +5,43 @@ const AUTH_EMAIL_LIST = [
 ];
 
 function onOpen(event: GoogleAppsScript.Events.SheetsOnOpen) {
-  const email = event.user.getEmail();
-  // if (!AUTH_EMAIL_LIST.includes(email)) return;
-
   const ui = SpreadsheetApp.getUi();
   ui.createMenu("관리자 도구")
     .addSubMenu(
       ui
         .createMenu("DB")
-        .addSubMenu(
-          ui
-            .createMenu("음성캠퍼스")
-            .addItem("[음성] 관리자 패널 동기화", "updateDB")
-            .addItem("[음성] 학생 시트 전체 동기화", "syncDBWithStudentInfo")
-            .addItem(
-              "[음성] 관리자 패널 반별시트 새로고침",
-              "resetManagerPanel"
-            )
-            .addItem(
-              "[음성] 관리자 패널 데이터 복구",
-              "recoverManagerPanelFromDB"
-            )
-            .addItem("[음성] 관리자 패널 새로고침", "resetManagerPanel")
-        )
-        .addSubMenu(
-          ui
-            .createMenu("미국캠퍼스")
-            .addItem("[미국] 관리자 패널 동기화", "updateDB_1")
-            .addItem("[미국] 학생 시트 전체 동기화", "syncDBWithStudentInfo_1")
-            .addItem("[미국] 관리자 패널 초기화", "resetManagerPanel_1")
-            .addItem("[미국] 관리자 패널 복구", "recoverManagerPanelFromDB_1")
-        )
-        .addItem("정렬 및 서식 적용", "styleDB")
+
+        .addItem("학생 시트 전체 동기화", "UI_syncDBWithStudentInfo")
+        .addItem("정렬 및 서식 적용", "UI_styleDB")
     )
     .addSubMenu(
       ui
+        .createMenu("관리자 패널")
+        .addItem(
+          "관리자 패널 데이터를 DB로 업데이트",
+          "UI_updateDBWithManagerPanelClassData"
+        )
+        .addItem(
+          "관리자 패널 반별시트 오늘 날짜로 초기화",
+          "UI_resetManagerPanel"
+        )
+        .addItem(
+          "DB 데이터를 관리자 패널로 복구",
+          "UI_recoverManagerPanelFromDB"
+        )
+        .addItem(
+          "관리자 패널 과제시트 초기화",
+          "resetManagerPanel_NOT_YET_IMPLEMENTED"
+        )
+    )
+
+    .addSubMenu(
+      ui
         .createMenu("상벌점")
-        .addItem("상벌점 설문지 동기화", "updateMeritPointsForm")
+        .addItem("상벌점 설문지 동기화", "UI_updateMeritPointsFormReasons")
         .addItem(
           "상벌점 설문지 응답 전체 업데이트",
-          "updateAllMeritPointsFormResponsesToDB"
+          "UI_updateAllMeritPointsFormResponsesToDB"
         )
     )
     .addSubMenu(
@@ -58,24 +55,17 @@ function onOpen(event: GoogleAppsScript.Events.SheetsOnOpen) {
 function addMenuTrigger() {
   // Becareful. This function must be ran only one time.
 
-  const spreadsheet = SpreadsheetApp.openById(DB_SHEET_ID);
-  ScriptApp.newTrigger("onOpen").forSpreadsheet(spreadsheet).onOpen().create();
-}
+  const spreadsheet_ES = SpreadsheetApp.openById(ES_DB_SHEET_ID);
+  ScriptApp.newTrigger("onOpen")
+    .forSpreadsheet(spreadsheet_ES)
+    .onOpen()
+    .create();
 
-function onEdit(e: GoogleAppsScript.Events.SheetsOnEdit) {
-  const sheetName = e.range.getSheet().getName();
-  switch (sheetName) {
-    case "TOEFL 도약반":
-    case "TOEFL 인터반":
-    case "TOEFL 정규반":
-    case "TOEFL 실전반":
-    case "SAT 정규반":
-    case "SAT 실전반":
-      updateDB();
-      break;
-    default:
-      break;
-  }
+  const spreadsheet_US = SpreadsheetApp.openById(US_DB_SHEET_ID);
+  ScriptApp.newTrigger("onOpen")
+    .forSpreadsheet(spreadsheet_US)
+    .onOpen()
+    .create();
 }
 
 function addSyncTrigger() {
@@ -98,9 +88,15 @@ function createUUID() {
 
 function addMeritPointFormOnSubmitTrigger() {
   // Find form and add trigger 'onMeritPointFormSubmit'
-  const form = FormApp.openById(MERIT_FORM_ID);
+  const form_ES = FormApp.openById(ES_MERIT_FORM_ID);
   ScriptApp.newTrigger("onMeritPointFormSubmit")
-    .forForm(form)
+    .forForm(form_ES)
+    .onFormSubmit()
+    .create();
+
+  const form_US = FormApp.openById(US_MERIT_FORM_ID);
+  ScriptApp.newTrigger("onMeritPointFormSubmit")
+    .forForm(form_US)
     .onFormSubmit()
     .create();
 }
@@ -108,5 +104,12 @@ function addMeritPointFormOnSubmitTrigger() {
 function onMeritPointFormSubmit(
   event: GoogleAppsScript.Events.FormsOnFormSubmit
 ) {
-  updateMeritPontFormResponse(event.response);
+  const title = event.source.getTitle();
+  if (title.includes("음성")) {
+    const dbSpreadsheet = SpreadsheetApp.openById(ES_DB_SHEET_ID);
+    updateMeritPontFormResponse(dbSpreadsheet, event.response);
+  } else if (title.includes("미국")) {
+    const dbSpreadsheet = SpreadsheetApp.openById(US_DB_SHEET_ID);
+    updateMeritPontFormResponse(dbSpreadsheet, event.response);
+  }
 }
