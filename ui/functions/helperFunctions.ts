@@ -41,12 +41,11 @@ function getStudents(dbSpreadsheet: GoogleAppsScript.Spreadsheet.Spreadsheet) {
 
 function toDateString(dateObj: Date) {
   const today = new Date(dateObj);
-  const year = today.getFullYear();
+  // const year = today.getFullYear();
   const month = today.getMonth() + 1;
   const date = today.getDate();
 
   return `${month}월 ${date}일`;
-  //   return `${year}년 ${month}월 ${date}일`;
 }
 
 function getTodayDateString() {
